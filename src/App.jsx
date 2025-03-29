@@ -4,7 +4,25 @@ import { useState, useEffect, useRef } from "react";
 import "./App.css";
 import Chart from "chart.js/auto";
 
-// Strict map of 30 keys (15 minor + 15 major) to their relative groups
+// --- Normalize key for grouping (convert Bb → B♭, keep # as-is) ---
+function normalizeKeyName(name) {
+    return name.replace(/([A-G])b/g, "$1♭").trim();
+}
+
+// --- Normalize title for deduplication ---
+function normalizeTitleForComparison(name) {
+    return name
+        .toLowerCase()
+        .replace(
+            /[-–:]?\s*(instrumental|demo|edit|remaster|mix|version|special|alternate|radio|7("| inch|”)?)/gi,
+            ""
+        )
+        .replace(/\(.*?\)/g, "") // remove anything in parentheses
+        .replace(/[^a-z0-9]/gi, "") // remove punctuation
+        .trim();
+}
+
+// --- Relative key group map (♭ handled, # unchanged) ---
 const RELATIVE_KEY_GROUPS = {
     // Minor keys
     "A♭ Minor": "C♭ / A♭ minor",
@@ -80,14 +98,24 @@ function App() {
                 const mainArtist = artists[0];
                 if (!mainArtist.includes(lowerQuery)) continue;
 
-                const originalKey = song.k || "Unknown";
+                const rawKey = song.k || "Unknown";
+                const originalKey = normalizeKeyName(rawKey);
                 const keyGroup = RELATIVE_KEY_GROUPS[originalKey];
-                if (!keyGroup) continue; // Skip unrecognized keys
+                if (!keyGroup) continue;
 
-                const songLabel = `${song.n.trim()} (${originalKey})`;
+                const rawTitle = song.n.trim();
+                const normalizedTitle = normalizeTitleForComparison(rawTitle);
+                const songLabel = `${rawTitle} (${originalKey})`;
 
                 if (!keyMap[keyGroup]) keyMap[keyGroup] = [];
-                keyMap[keyGroup].push(songLabel);
+
+                const alreadyExists = keyMap[keyGroup].some((label) =>
+                    normalizeTitleForComparison(label).includes(normalizedTitle)
+                );
+
+                if (!alreadyExists) {
+                    keyMap[keyGroup].push(songLabel);
+                }
             }
 
             const grouped = Object.entries(keyMap)
