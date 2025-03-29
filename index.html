@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Songs by Key</title>
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+        <style>
+            body {
+                background-color: #121212;
+                color: #f0f0f0;
+                font-family: sans-serif;
+                padding: 2rem;
+                max-width: 1000px;
+                margin: auto;
+            }
+            input,
+            button {
+                font-size: 1rem;
+                padding: 0.5rem;
+                margin: 0.5rem 0;
+                background-color: #1e1e1e;
+                color: white;
+                border: 1px solid #444;
+                border-radius: 4px;
+            }
+            button:hover {
+                background-color: #333;
+                cursor: pointer;
+            }
+            .card {
+                background: #1e1e1e;
+                margin: 1rem 0;
+                padding: 1rem;
+                border-radius: 8px;
+                border: 1px solid #333;
+            }
+            .key-title {
+                font-size: 1.2rem;
+                margin-bottom: 0.5rem;
+                color: #87cefa;
+            }
+            ul {
+                padding-left: 1.2rem;
+            }
+            canvas {
+                background: #1e1e1e;
+                margin-top: 2rem;
+                border-radius: 8px;
+            }
+        </style>
+    </head>
+    <body>
+        <h1>Songs Grouped by Key</h1>
+        <form id="artistForm">
+            <label for="artist">Artist Name:</label><br />
+            <input
+                type="text"
+                id="artist"
+                placeholder="e.g. the weeknd"
+                required
+            />
+            <button type="submit">Search</button>
+        </form>
+
+        <div id="chart-container">
+            <canvas id="keyChart" width="400" height="200"></canvas>
+        </div>
+
+        <div class="result" id="output"></div>
+
+        <script>
+            async function fetchAndGroupSongsByKey(query) {
+                const response = await fetch(
+                    `/api/tunebat?query=${encodeURIComponent(query)}`
+                );
+                const json = await response.json();
+                const allSongs = json.songs || [];
+
+                const keyMap = {};
+                const lowerQuery = query.toLowerCase();
+                for (const song of allSongs) {
+                    const artists = song.as.map((a) => a.toLowerCase());
+                    const mainArtist = artists[0];
+                    if (!mainArtist.includes(lowerQuery)) continue;
+
+                    const key = song.k || "Unknown";
+                    if (!keyMap[key]) keyMap[key] = [];
+                    keyMap[key].push(song);
+                }
+
+                return Object.entries(keyMap)
+                    .map(([key, songs]) => ({
+                        key,
+                        numberOfSongs: songs.length,
+                        songs: songs.map((s) => s.n.trim()),
+                    }))
+                    .sort((a, b) => b.numberOfSongs - a.numberOfSongs);
+            }
+
+            function renderChart(data) {
+                const ctx = document
+                    .getElementById("keyChart")
+                    .getContext("2d");
+                const labels = data.map((d) => d.key);
+                const values = data.map((d) => d.numberOfSongs);
+
+                if (window.keyChart) window.keyChart.destroy();
+
+                window.keyChart = new Chart(ctx, {
+                    type: "bar",
+                    data: {
+                        labels: labels,
+                        datasets: [
+                            {
+                                label: "Number of Songs",
+                                data: values,
+                                backgroundColor: "rgba(135, 206, 250, 0.6)",
+                                borderColor: "rgba(135, 206, 250, 1)",
+                                borderWidth: 1,
+                            },
+                        ],
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: {
+                            legend: { labels: { color: "white" } },
+                        },
+                        scales: {
+                            x: { ticks: { color: "white" } },
+                            y: { ticks: { color: "white" } },
+                        },
+                    },
+                });
+            }
+
+            function renderResults(data) {
+                const output = document.getElementById("output");
+                output.innerHTML = "";
+                data.forEach((entry) => {
+                    const div = document.createElement("div");
+                    div.className = "card";
+                    div.innerHTML = `
+          <div class="key-title">${entry.key} (${
+                        entry.numberOfSongs
+                    } songs)</div>
+          <ul>${entry.songs.map((song) => `<li>${song}</li>`).join("")}</ul>
+        `;
+                    output.appendChild(div);
+                });
+            }
+
+            document
+                .getElementById("artistForm")
+                .addEventListener("submit", async (e) => {
+                    e.preventDefault();
+                    const query = document
+                        .getElementById("artist")
+                        .value.trim();
+                    document.getElementById("output").innerHTML =
+                        "<p>Loading...</p>";
+                    const result = await fetchAndGroupSongsByKey(query);
+                    renderChart(result);
+                    renderResults(result);
+                });
+        </script>
+    </body>
+</html>
