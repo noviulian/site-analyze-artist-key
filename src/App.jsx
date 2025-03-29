@@ -4,8 +4,9 @@ import { useState, useEffect, useRef } from "react";
 import "./App.css";
 import Chart from "chart.js/auto";
 
+// Strict map of 30 keys (15 minor + 15 major) to their relative groups
 const RELATIVE_KEY_GROUPS = {
-    // Minor keys (15 total)
+    // Minor keys (15)
     "A♭ Minor": "C♭ / A♭ minor",
     "E♭ Minor": "G♭ / E♭ minor",
     "B♭ Minor": "D♭ / B♭ minor",
@@ -22,7 +23,7 @@ const RELATIVE_KEY_GROUPS = {
     "D♯ Minor": "F♯ / D♯ minor",
     "A♯ Minor": "C♯ / A♯ minor",
 
-    // Major keys (15 total)
+    // Major keys (15)
     "C♭ Major": "C♭ / A♭ minor",
     "G♭ Major": "G♭ / E♭ minor",
     "D♭ Major": "D♭ / B♭ minor",
@@ -80,8 +81,8 @@ function App() {
                 if (!mainArtist.includes(lowerQuery)) continue;
 
                 const originalKey = song.k || "Unknown";
-                const keyGroup =
-                    RELATIVE_KEY_GROUPS[originalKey] || originalKey;
+                const keyGroup = RELATIVE_KEY_GROUPS[originalKey];
+                if (!keyGroup) continue; // Skip unrecognized keys
 
                 const songLabel = `${song.n.trim()} (${originalKey})`;
 
@@ -110,7 +111,6 @@ function App() {
         if (!canvas) return;
 
         const ctx = canvas.getContext("2d");
-
         if (chart) chart.destroy();
 
         const gradient = ctx.createLinearGradient(0, 0, 0, 400);
