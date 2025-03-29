@@ -4,6 +4,33 @@ import { useState, useEffect, useRef } from "react";
 import "./App.css";
 import Chart from "chart.js/auto";
 
+const RELATIVE_KEY_GROUPS = {
+    "C Major": "C / A minor",
+    "A Minor": "C / A minor",
+    "G Major": "G / E minor",
+    "E Minor": "G / E minor",
+    "D Major": "D / B minor",
+    "B Minor": "D / B minor",
+    "A Major": "A / F♯ minor",
+    "F♯ Minor": "A / F♯ minor",
+    "E Major": "E / C♯ minor",
+    "C♯ Minor": "E / C♯ minor",
+    "B Major": "B / G♯ minor",
+    "G♯ Minor": "B / G♯ minor",
+    "F♯ Major": "F♯ / D♯ minor",
+    "D♯ Minor": "F♯ / D♯ minor",
+    "D♭ Major": "D♭ / B♭ minor",
+    "B♭ Minor": "D♭ / B♭ minor",
+    "A♭ Major": "A♭ / F minor",
+    "F Minor": "A♭ / F minor",
+    "E♭ Major": "E♭ / C minor",
+    "C Minor": "E♭ / C minor",
+    "B♭ Major": "B♭ / G minor",
+    "G Minor": "B♭ / G minor",
+    "F Major": "F / D minor",
+    "D Minor": "F / D minor",
+};
+
 function App() {
     const [query, setQuery] = useState("");
     const [results, setResults] = useState([]);
@@ -11,14 +38,12 @@ function App() {
     const [chart, setChart] = useState(null);
     const canvasRef = useRef(null);
 
-    // Cleanup on unmount
     useEffect(() => {
         return () => {
             if (chart) chart.destroy();
         };
     }, [chart]);
 
-    // Re-render chart after results update
     useEffect(() => {
         if (results.length === 0) return;
         renderChart(results);
@@ -39,21 +64,27 @@ function App() {
 
             const keyMap = {};
             const lowerQuery = query.toLowerCase();
+
             for (const song of allSongs) {
                 const artists = song.as.map((a) => a.toLowerCase());
                 const mainArtist = artists[0];
                 if (!mainArtist.includes(lowerQuery)) continue;
 
-                const key = song.k || "Unknown";
-                if (!keyMap[key]) keyMap[key] = [];
-                keyMap[key].push(song);
+                const originalKey = song.k || "Unknown";
+                const keyGroup =
+                    RELATIVE_KEY_GROUPS[originalKey] || originalKey;
+
+                const songLabel = `${song.n.trim()} (${originalKey})`;
+
+                if (!keyMap[keyGroup]) keyMap[keyGroup] = [];
+                keyMap[keyGroup].push(songLabel);
             }
 
             const grouped = Object.entries(keyMap)
                 .map(([key, songs]) => ({
                     key,
                     numberOfSongs: songs.length,
-                    songs: songs.map((s) => s.n.trim()),
+                    songs,
                 }))
                 .sort((a, b) => b.numberOfSongs - a.numberOfSongs);
 
@@ -145,7 +176,7 @@ function App() {
 
     return (
         <main className="container">
-            <h1>Songs Grouped by Key</h1>
+            <h1>Songs Grouped by Relative Keys</h1>
 
             <form onSubmit={fetchData} className="search-form">
                 <input
