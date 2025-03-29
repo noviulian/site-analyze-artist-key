@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import "./App.css";
 import Chart from "chart.js/auto";
 
@@ -9,15 +9,21 @@ function App() {
     const [results, setResults] = useState([]);
     const [loading, setLoading] = useState(false);
     const [chart, setChart] = useState(null);
+    const canvasRef = useRef(null);
 
-    // Clean up chart on component unmount
+    // Cleanup on unmount
     useEffect(() => {
         return () => {
-            if (chart) {
-                chart.destroy();
-            }
+            if (chart) chart.destroy();
         };
     }, [chart]);
+
+    // Re-render chart after results update
+    useEffect(() => {
+        if (results.length === 0) return;
+        renderChart(results);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [results]);
 
     async function fetchData(e) {
         e.preventDefault();
@@ -52,7 +58,6 @@ function App() {
                 .sort((a, b) => b.numberOfSongs - a.numberOfSongs);
 
             setResults(grouped);
-            renderChart(grouped);
         } catch (error) {
             console.error("Error fetching data:", error);
         } finally {
@@ -61,17 +66,13 @@ function App() {
     }
 
     function renderChart(data) {
-        const canvas = document.getElementById("chart");
+        const canvas = canvasRef.current;
         if (!canvas) return;
 
         const ctx = canvas.getContext("2d");
 
-        // Destroy previous chart if it exists
-        if (chart) {
-            chart.destroy();
-        }
+        if (chart) chart.destroy();
 
-        // Create color gradient
         const gradient = ctx.createLinearGradient(0, 0, 0, 400);
         gradient.addColorStop(0, "rgba(56, 189, 248, 0.8)");
         gradient.addColorStop(1, "rgba(129, 140, 248, 0.8)");
@@ -98,10 +99,7 @@ function App() {
                     legend: {
                         labels: {
                             color: "#e2e8f0",
-                            font: {
-                                family: "'Inter', sans-serif",
-                                size: 14,
-                            },
+                            font: { family: "'Inter', sans-serif", size: 14 },
                         },
                     },
                     tooltip: {
@@ -118,43 +116,27 @@ function App() {
                             size: 14,
                             weight: "bold",
                         },
-                        bodyFont: {
-                            family: "'Inter', sans-serif",
-                            size: 14,
-                        },
+                        bodyFont: { family: "'Inter', sans-serif", size: 14 },
                     },
                 },
                 scales: {
                     x: {
                         ticks: {
                             color: "#e2e8f0",
-                            font: {
-                                family: "'Inter', sans-serif",
-                            },
+                            font: { family: "'Inter', sans-serif" },
                         },
-                        grid: {
-                            color: "#334155",
-                            drawBorder: false,
-                        },
+                        grid: { color: "#334155", drawBorder: false },
                     },
                     y: {
                         ticks: {
                             color: "#e2e8f0",
-                            font: {
-                                family: "'Inter', sans-serif",
-                            },
+                            font: { family: "'Inter', sans-serif" },
                         },
-                        grid: {
-                            color: "#334155",
-                            drawBorder: false,
-                        },
+                        grid: { color: "#334155", drawBorder: false },
                         beginAtZero: true,
                     },
                 },
-                animation: {
-                    duration: 1000,
-                    easing: "easeOutQuart",
-                },
+                animation: { duration: 1000, easing: "easeOutQuart" },
             },
         });
 
@@ -162,7 +144,7 @@ function App() {
     }
 
     return (
-        <div className="container">
+        <main className="container">
             <h1>Songs Grouped by Key</h1>
 
             <form onSubmit={fetchData} className="search-form">
@@ -187,7 +169,7 @@ function App() {
             {results.length > 0 && (
                 <>
                     <div className="chart-container">
-                        <canvas id="chart"></canvas>
+                        <canvas ref={canvasRef}></canvas>
                     </div>
 
                     <div className="results-grid">
@@ -209,7 +191,7 @@ function App() {
                     </div>
                 </>
             )}
-        </div>
+        </main>
     );
 }
 
