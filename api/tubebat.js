@@ -1,5 +1,7 @@
-export default async function handler(req, res) {
-    const { query } = req.query;
+export async function GET(request) {
+    const { searchParams } = new URL(request.url);
+    const query = searchParams.get("query");
+
     const headers = {
         accept: "application/json, text/plain, */*",
         "accept-language": "en-US,en;q=0.9",
@@ -20,9 +22,19 @@ export default async function handler(req, res) {
             const json = await response.json();
             allSongs.push(...(json?.data?.items || []));
         }
-        res.status(200).json({ songs: allSongs });
+
+        return new Response(JSON.stringify({ songs: allSongs }), {
+            headers: { "Content-Type": "application/json" },
+            status: 200,
+        });
     } catch (err) {
-        console.log(err);
-        res.status(500).json({ error: "Failed to fetch from Tunebat." });
+        console.error(err);
+        return new Response(
+            JSON.stringify({ error: "Failed to fetch from Tunebat." }),
+            {
+                headers: { "Content-Type": "application/json" },
+                status: 500,
+            }
+        );
     }
 }
