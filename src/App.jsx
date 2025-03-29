@@ -6,7 +6,7 @@ import Chart from "chart.js/auto";
 
 // Strict map of 30 keys (15 minor + 15 major) to their relative groups
 const RELATIVE_KEY_GROUPS = {
-    // Minor keys (15)
+    // Minor keys
     "A♭ Minor": "C♭ / A♭ minor",
     "E♭ Minor": "G♭ / E♭ minor",
     "B♭ Minor": "D♭ / B♭ minor",
@@ -17,13 +17,13 @@ const RELATIVE_KEY_GROUPS = {
     "A Minor": "C / A minor",
     "E Minor": "G / E minor",
     "B Minor": "D / B minor",
-    "F♯ Minor": "A / F♯ minor",
-    "C♯ Minor": "E / C♯ minor",
-    "G♯ Minor": "B / G♯ minor",
-    "D♯ Minor": "F♯ / D♯ minor",
-    "A♯ Minor": "C♯ / A♯ minor",
+    "F# Minor": "A / F# minor",
+    "C# Minor": "E / C# minor",
+    "G# Minor": "B / G# minor",
+    "D# Minor": "F# / D# minor",
+    "A# Minor": "C# / A# minor",
 
-    // Major keys (15)
+    // Major keys
     "C♭ Major": "C♭ / A♭ minor",
     "G♭ Major": "G♭ / E♭ minor",
     "D♭ Major": "D♭ / B♭ minor",
@@ -34,11 +34,11 @@ const RELATIVE_KEY_GROUPS = {
     "C Major": "C / A minor",
     "G Major": "G / E minor",
     "D Major": "D / B minor",
-    "A Major": "A / F♯ minor",
-    "E Major": "E / C♯ minor",
-    "B Major": "B / G♯ minor",
-    "F♯ Major": "F♯ / D♯ minor",
-    "C♯ Major": "C♯ / A♯ minor",
+    "A Major": "A / F# minor",
+    "E Major": "E / C# minor",
+    "B Major": "B / G# minor",
+    "F# Major": "F# / D# minor",
+    "C# Major": "C# / A# minor",
 };
 
 function App() {
